@@ -1,46 +1,54 @@
-﻿$dialVal=50
-$zCount=0
-$turns=0
-#Reads a txt file named "Day1input.txt" in the same directory
+$dialVal=50 #Starting dial position
+$zCount=0 #Counts zeroes after movement
+$tcount=0 #counts zeroes during movement
 
+function Open-File([string] $initialDirectory){
 
-Get-Content -Path .\day1input.txt | ForEach-Object -process {
-    #write-host "Turn "($_.SubString(0,1))" for "($_.SubString(1))
-    $valDir=$_.SubString(0,1)
-    $valTurn=$_.SubString(1)
-    #$turns++
-    #Write-Host "Turns :"$turns
-    #Write-Host " Parsing "$_" as "$valDir" and "$valTurn
+    [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null
+
+    $OpenFileDialog = New-Object System.Windows.Forms.OpenFileDialog
+    $OpenFileDialog.initialDirectory = $initialDirectory
+    $OpenFileDialog.filter = "All files (*.*)| *.*"
+    $OpenFileDialog.ShowDialog() |  Out-Null
+
+    return $OpenFileDialog.filename
+}
+$fileuse=Open-File 
+
+Get-Content -Path $fileuse | ForEach-Object -process {
+    $valDir=$_.SubString(0,1) #reads turn direction
+    $valTurn=$_.SubString(1) #number of clicks
+
     if ($valDir -eq "R")
     {
-        #Write-Host "  Turning Right by"$valTurn
         $dialval=$dialval+[int]$valTurn
         while ($dialval -gt 99)
         {
             $dialval = $dialval-100
+            $tcount++
+            if ($dialVal -eq 0) { $tcount-- } #Avoids extra count for landing on 0
         }
-        #Write-Host "  Dial now at"$dialval
         if ($dialval -eq 0)
         {
             $zCount++
-            #write-host "  hit Zero!"
         }
     }
     if ($valDir -eq "L")
     {
-        #Write-Host "  Turning Left by"$valTurn
+        if ($dialVal -eq 0) {$tcount--} #avoids extra count for starting from zero
         $dialval=$dialval-[int]$valTurn
         while ($dialval -lt 0)
         {
+            
             $dialval = $dialval+100
+            $tcount++
         }
-        #Write-Host "  Dial now at"$dialval
         if ($dialval -eq 0)
         {
             $zCount++
-            #write-host "  hit Zero!"
         }
     }
-    #Write-Host "Dial turned to :"$dialval
 }
-Write-Host "Key is "$zCount
+Write-Host "Key is:"$zCount
+$tcount+=$zCount
+Write-Host "Method 0x434C49434B key is:"$tcount
